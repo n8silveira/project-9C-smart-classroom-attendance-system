@@ -1,1 +1,1 @@
-# CS410-Project-9C-Smart-Classroom-Attendance-System
+# project-9C-smart-classroom-attendance-system
