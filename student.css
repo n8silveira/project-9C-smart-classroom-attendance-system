@@ -1,0 +1,39 @@
+body {
+    background: #3c3c3c;
+    display: flex;
+    justify-content: center;
+    padding-top: 60px;
+    font-family: Arial;
+}
+
+.attendance-container {
+    background: #233a8b;
+    width: 380px;
+    padding: 25px;
+    border-radius: 12px;
+    color: white;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    margin-top: 5px;
+}
+
+button {
+    margin-top: 15px;
+    padding: 10px;
+    width: 100%;
+    background: #f0c419;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#message {
+    margin-top: 15px;
+    font-size: 0.9em;
+}
