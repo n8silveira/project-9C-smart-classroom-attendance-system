@@ -140,3 +140,12 @@ body {
 .hidden {
     display: none;
 }
+.dashboard-container {
+    background: #233a8b;
+    padding: 30px;
+    width: 500px;
+    border-radius: 12px;
+}
+h1 {
+    text-align: center;
+}
