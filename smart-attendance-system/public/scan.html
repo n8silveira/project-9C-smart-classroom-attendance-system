@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Attendance Scan</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase Compat -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+    <h1>Student Attendance Scan</h1>
+    <p id="sessionDisplay"></p>
+
+    <button id="loginBtn">Login with UMB Email</button>
+    <button id="logoutBtn" style="display:none;">Logout</button>
+
+    <script src="firebaseConfig.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

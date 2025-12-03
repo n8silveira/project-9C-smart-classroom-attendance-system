@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Instructor Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+    <h1>Instructor Dashboard</h1>
+
+    <button id="loginBtn">Login with UMB Email</button>
+    <button id="logoutBtn" style="display:none;">Logout</button>
+
+    <button id="generateQR" style="margin-top:20px;">Generate Attendance QR Code</button>
+
+    <div id="qrContainer" style="margin-top: 20px;">
+        <h3>QR Code for Attendance:</h3>
+        <img id="qrImage" src="" style="width: 250px; height: 250px;" />
+    </div>
+
+    <hr style="margin-top:40px;">
+
+    <h2>Attendance Dashboard</h2>
+    <button id="loadAttendanceBtn">Load Attendance</button>
+
+    <h3>Present Students</h3>
+    <ul id="presentList"></ul>
+
+    <h3>Absent Students</h3>
+    <ul id="absentList"></ul>
+
+    <script src="firebaseConfig.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
