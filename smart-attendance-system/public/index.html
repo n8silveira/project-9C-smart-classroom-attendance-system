@@ -13,23 +13,24 @@
 <body>
     <h1>Instructor Dashboard</h1>
 
-    <button id="loginBtn">Login with UMB Email</button>
-    <button id="logoutBtn" style="display:none;">Logout</button>
+    <button id="login-btn">Login with UMB Email</button>
+    <button id="logout-btn" style="display:none;">Logout</button>
 
-    <button id="generateQR" style="margin-top:20px;">Generate Attendance QR Code</button>
+    <button id="generate-qr-btn" style="margin-top:20px;">Generate Attendance QR Code</button>
 
-    <div id="qrContainer" style="margin-top: 20px;">
+    <div id="qr-code" style="margin-top: 20px;">
         <h3>QR Code for Attendance:</h3>
-        <img id="qrImage" src="" style="width: 250px; height: 250px;" />
+        <!-- <img id="qrImage" src="" style="width: 250px; height: 250px;" /> -->
+        <div id="qr-code"></div>
     </div>
 
     <hr style="margin-top:40px;">
 
     <h2>Attendance Dashboard</h2>
-    <button id="loadAttendanceBtn">Load Attendance</button>
+    <button id="load-attendance-btn">Load Attendance</button>
 
     <h3>Present Students</h3>
-    <ul id="presentList"></ul>
+    <ul id="present-students"></ul>
 
     <h3>Absent Students</h3>
     <ul id="absentList"></ul>
