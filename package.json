@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "firebase": "^12.6.0",
+    "open": "^11.0.0",
+    "qrcode": "^1.5.4"
+  }
+}
