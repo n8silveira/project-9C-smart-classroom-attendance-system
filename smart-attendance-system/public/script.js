@@ -130,7 +130,7 @@ if (window.location.pathname.includes("scan.html")) {
 //  LOAD ATTENDANCE (Instructor Dashboard)
 /////////////////////////////////////////////////////
 
-document.getElementById("load-attendance-btn").addEventListener("click", () => {
+document.getElementById("load-attendance-btn").addEventListener("click", async () => {
   const sessionId = document.getElementById("current-session-id").innerText;
 
   if (!sessionId) {
@@ -138,18 +138,48 @@ document.getElementById("load-attendance-btn").addEventListener("click", () => {
     return;
   }
 
-  const list = document.getElementById("present-students");
-  list.innerHTML = "";
+  const presentList = document.getElementById("presentList");
+  const absentList = document.getElementById("absentList");
 
-  db.collection("Attendance")
+  presentList.innerHTML = "";
+  absentList.innerHTML = "";
+
+  // 1. Load full class roster
+  const rosterSnapshot = await db
+    .collection("ClassRoster")
+    .doc("CS101")
+    .collection("Students")
+    .get();
+
+  const roster = rosterSnapshot.docs.map(doc => doc.id);
+
+  // 2. Load present students for this session
+  const presentSnapshot = await db
+    .collection("Attendance")
     .doc(sessionId)
     .collection("PresentStudents")
-    .get()
-    .then(snapshot => {
-      snapshot.forEach(doc => {
-        const li = document.createElement("li");
-        li.textContent = doc.id;
-        list.appendChild(li);
-      });
-    });
+    .get();
+
+  const presentStudents = presentSnapshot.docs.map(doc => doc.id);
+
+  // 3. Determine absent students
+  const absentStudents = roster.filter(email => !presentStudents.includes(email));
+
+  // 4. Display present students
+  presentStudents.forEach(email => {
+    const li = document.createElement("li");
+    li.textContent = email + " ✔ PRESENT";
+    li.style.color = "green";
+    presentList.appendChild(li);
+  });
+
+  // 5. Display absent students
+  absentStudents.forEach(email => {
+    const li = document.createElement("li");
+    li.textContent = email + " X ABSENT";
+    li.style.color = "red";
+    absentList.appendChild(li);
+  });
+
+  alert("Attendance Loaded!");
 });
