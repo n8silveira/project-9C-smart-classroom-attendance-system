@@ -2,6 +2,9 @@
 //  FIREBASE CONFIG
 /////////////////////////////////////////////////////
 
+/* Commented out cause I believe this is preventing QR generation
+Duplicate in firebaseConfig.js file, we can most likely delete this
+
 const firebaseConfig = {
   apiKey: "AIzaSyCQgLM_dI2qGOVN4sS60nS9Y2X59H_AQWY",
   authDomain: "smart-attendance-system-ce608.firebaseapp.com",
@@ -15,6 +18,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+*/
 
 
 /////////////////////////////////////////////////////
@@ -71,28 +75,38 @@ document.getElementById("logout-btn").addEventListener("click", () => {
 //  GENERATE ATTENDANCE QR CODE (Instructor)
 /////////////////////////////////////////////////////
 
-document.getElementById("generate-qr-btn").addEventListener("click", () => {
-  if (!auth.currentUser) {
-    alert("Login required!");
-    return;
-  }
+// We need to implement login feature, right now any user can generate a code which
+// doesn't make sense. I will change it accordingly later.
 
-  const sessionId =
-    "session_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+(function () {
+  var btn = document.getElementById("generate-qr-btn");
+  if (!btn) return;
 
-  const scanUrl = `http://10.0.0.179:3000/scan.html?session=${sessionId}`;
+  btn.addEventListener("click", function () {
+    var now = new Date();
+    var year = now.getFullYear();
+    var month = String(now.getMonth() + 1).padStart(2, "0");
+    var day = String(now.getDate()).padStart(2, "0");
+    var dateStr = year + "-" + month + "-" + day;
 
-  new QRCode(document.getElementById("qr-code"), {
-    text: scanUrl,
-    width: 220,
-    height: 220
+    var identifier = "test-instructor";
+
+    var qrData = JSON.stringify({
+      type: "attendance",
+      date: dateStr,
+      instructor: identifier
+    });
+
+    var qrURL =
+      "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" +
+      encodeURIComponent(qrData);
+
+    var img = document.getElementById("qrImage");
+    if (img) {
+      img.src = qrURL;
+    }
   });
-
-  document.getElementById("current-session-id").innerText = sessionId;
-
-  console.log("QR generated:", scanUrl);
-  alert("QR Code Generated!");
-});
+})();
 
 
 /////////////////////////////////////////////////////
