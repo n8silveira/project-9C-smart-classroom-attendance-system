@@ -1,184 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Smart Attendance System</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 0 10px;
-    }
-    h1 {
-      text-align: center;
-    }
-    button {
-      padding: 8px 16px;
-      margin-bottom: 10px;
-      cursor: pointer;
-    }
-    #status {
-      margin-bottom: 10px;
-      font-size: 0.95rem;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 6px 8px;
-      text-align: left;
-      font-size: 0.9rem;
-    }
-    th {
-      background: #f0f0f0;
-    }
-    .present {
-      color: green;
-      font-weight: bold;
-    }
-    .absent {
-      color: #888;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Attendance System</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
-  <h1>Smart Attendance System</h1>
 
-  <button id="connect-btn">Connect to Arduino</button>
-  <div id="status">Status: Not connected</div>
+<div class="container">
 
-  <table>
-    <thead>
-      <tr>
-        <th>Student</th>
-        <th>Status</th>
-        <th>Time</th>
-      </tr>
-    </thead>
-    <tbody id="students-body">
-      <!-- rows will be injected automatically by JS (simulation, no specific name) -->
-    </tbody>
-  </table>
+    <h1 class="title">Smart Attendance System</h1>
+    <p class="subtitle">Arduino-powered attendance tracking system</p>
+    <p class="date">Tuesday, December 9, 2025</p>
 
-  <script>
-    // ---- Simulation: 25 students ----
-    const students = [];
-    for (let i = 1; i <= 25; i++) {
-      students.push({
-        id: i,
-        name: `Student ${i}`,
-        status: 'Absent',
-        time: '-'
-      });
-    }
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <button id="connect-btn" class="primary-btn">🔌 Connect to Arduino</button>
 
-    const statusEl = document.getElementById('status');
-    const tbody = document.getElementById('students-body');
-    const connectBtn = document.getElementById('connect-btn');
+        <div class="status-card">
+            <span class="status-icon">📡</span>
+            <span id="status">Not connected</span>
+        </div>
 
-    // ---- Render table ----
-    function renderTable() {
-      tbody.innerHTML = '';
-      students.forEach(s => {
-        const tr = document.createElement('tr');
+        <button id="reset-btn" class="icon-btn">⟳ Reset</button>
+        <button id="export-btn" class="icon-btn">⬇ Export</button>
+    </div>
 
-        const tdName = document.createElement('td');
-        tdName.textContent = s.name;
-        tr.appendChild(tdName);
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <p class="label">Total Students</p>
+            <h2 id="totalStudents">25</h2>
+        </div>
 
-        const tdStatus = document.createElement('td');
-        tdStatus.textContent = s.status;
-        tdStatus.className = s.status === 'Present' ? 'present' : 'absent';
-        tr.appendChild(tdStatus);
+        <div class="stat-card">
+            <p class="label">Present</p>
+            <h2 id="presentCount">0</h2>
+        </div>
 
-        const tdTime = document.createElement('td');
-        tdTime.textContent = s.time;
-        tr.appendChild(tdTime);
+        <div class="stat-card">
+            <p class="label">Absent</p>
+            <h2 id="absentCount">25</h2>
+        </div>
+    </div>
 
-        tbody.appendChild(tr);
-      });
-    }
+    <!-- Progress Bar Section -->
+    <div class="progress-card">
+        <p class="label">Attendance Rate</p>
+        <div class="progress-bar">
+            <div id="progressFill"></div>
+        </div>
+        <span id="progressPercent">0%</span>
+    </div>
 
-    renderTable();
+    <!-- Table -->
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Status</th>
+                    <th>Check-in Time</th>
+                </tr>
+            </thead>
+            <tbody id="students-body">
+            </tbody>
+        </table>
+    </div>
 
-    // ---- Handle SCAN lines from Arduino ----
-    function handleLine(line) {
-      // Shows: "SCAN 1"
-      if (!line.startsWith('SCAN')) return;
+</div>
 
-      const parts = line.split(' ');
-      if (parts.length < 2) return;
+<script src="script.js"></script>
 
-      const studentId = parseInt(parts[1], 10);
-      if (isNaN(studentId)) return;
-      if (studentId < 1 || studentId > 25) return;
-
-      const idx = studentId - 1;
-      students[idx].status = 'Present';
-
-      // Using browser time as "attendance time"
-      const now = new Date();
-      students[idx].time = now.toLocaleString(); // "Month/Day/Year, Time"
-
-      renderTable();
-    }
-
-    // ---- Web Serial connection ----
-    let port;
-    let reader;
-
-    async function connectSerial() {
-      if (!('serial' in navigator)) {
-        alert('Web Serial API not supported in this browser. Please use Chrome or Edge.'); // couldn't figure out for firefox
-        return;
-      }
-
-      try {
-        // Arduino port
-        port = await navigator.serial.requestPort();
-        await port.open({ baudRate: 9600 });
-        statusEl.textContent = 'Status: Connected. Waiting for scans...';
-
-        // Stream reader setup
-        const decoder = new TextDecoderStream();
-        const readableStreamClosed = port.readable.pipeTo(decoder.writable);
-        reader = decoder.readable.getReader();
-
-        let buffer = '';
-
-        // Read loop
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) {
-            break; // reader released
-          }
-          if (value) {
-            buffer += value;
-            let lines = buffer.split('\n');
-            buffer = lines.pop();
-            for (const line of lines) {
-              const cleaned = line.trim();
-              if (cleaned.length > 0) {
-                console.log('Received:', cleaned);
-                handleLine(cleaned);
-              }
-            }
-          }
-        }
-      } catch (err) {
-        console.error(err);
-        statusEl.textContent = 'Status: Error connecting: ' + err;
-      }
-    }
-
-    connectBtn.addEventListener('click', () => {
-      connectSerial();
-    });
-  </script>
 </body>
 </html>
