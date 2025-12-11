@@ -91,6 +91,21 @@ body {
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
 }
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-present {
+  color: var(--present);
+}
+
+.stat-absent {
+  color: var(--absent);
+}
 
 /* Progress */
 .progress-card {
@@ -109,12 +124,33 @@ body {
   border-radius: 10px;
   overflow: hidden;
 }
+#progressPercent {
+  float: right;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--present);
+}
 
 #progressFill {
   height: 100%;
   width: 0%;
   background: var(--present);
+  border-radius: 10px;
   transition: width 0.3s ease;
+}
+#progressPercent {
+  float: right;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--present);
+}
+#presentCount {
+  color: var(--present);
+  font-weight: 700;
+}
+#absentCount {
+  color: var(--absent);
+  font-weight: 700;
 }
 
 /* Chart Block */
@@ -182,12 +218,10 @@ tbody tr:hover {
   margin-right: 6px;
 }
 
-.status-present { background: var(--present); }
-.status-absent { background: var(--absent); }
+.status-dot.status-present { background: var(--present); }
+.status-dot.status-absent { background: var(--absent); }
 
-/* ===========================
-   SIMPLE STUDENT INFO MODAL
-=========================== */
+/* SIMPLE STUDENT INFO MODAL */
 
 .modal {
   position: fixed;
