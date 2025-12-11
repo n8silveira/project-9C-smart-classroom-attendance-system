@@ -23,6 +23,24 @@ const absentEl = document.getElementById('absentCount');
 const progressFill = document.getElementById('progressFill');
 const progressPercent = document.getElementById('progressPercent');
 
+const resetBtn = document.getElementById('reset-btn');
+const exportBtn = document.getElementById('export-btn');
+
+// Set today's date in the header
+const dateEl = document.querySelector('.date');
+if (dateEl) {
+  const now = new Date();
+  dateEl.textContent = now.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+}
+
+if (totalEl) {
+  totalEl.textContent = students.length.toString();
+}
 
 // update dashboard stats
 function updateStats() {
@@ -79,6 +97,53 @@ function renderTable() {
 
 renderTable();
 
+// reset feature
+async function resetAttendance() {
+  students.forEach(s => {
+    s.status = 'Absent';
+    s.time = '-';
+    s.selected = false;
+  });
+  renderTable();
+
+  if (statusEl) {
+    statusEl.textContent = 'Attendance reset successfully.';
+  }
+
+  // tells arduino to reset counter as well
+  if (port && port.writable) {
+    const encoder = new TextEncoder();
+    const writer = port.writable.getWriter();
+    await writer.write(encoder.encode('RESET\n'));
+    writer.releaseLock();
+  }
+}
+
+// export feature (CSV)
+function exportAttendance() {
+  let csv = 'Student,Status,Check-in Time\n';
+
+  students.forEach(s => {
+    const name = `"${s.name}"`;
+    const status = `"${s.status}"`;
+    const time = `"${s.time}"`;
+    csv += `${name},${status},${time}\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+  a.href = url;
+  a.download = `attendance_${dateStr}.csv`;
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 // handle SCAN lines from arduino
 function handleLine(line) {
@@ -136,3 +201,12 @@ async function connectSerial() {
 }
 
 connectBtn.addEventListener('click', connectSerial);
+
+// hook up buttons
+if (resetBtn) {
+  resetBtn.addEventListener('click', resetAttendance);
+}
+
+if (exportBtn) {
+  exportBtn.addEventListener('click', exportAttendance);
+}

@@ -22,6 +22,9 @@ int currentStudent = 1;
 const int maxStudents = 25;
 bool wasNear = false;
 
+// -------------------- SERIAL INPUT BUFFER (for RESET cmd) --------------------
+String inputLine = "";
+
 // -------------------- SETUP --------------------
 void setup() {
   Serial.begin(9600);
@@ -72,8 +75,44 @@ void setColor(bool r, bool g, bool b) {
   digitalWrite(BLUELED,  b ? HIGH : LOW);
 }
 
+// -------------------- SERIAL COMMAND HANDLER --------------------
+void handleSerial() {
+  while (Serial.available()) {
+    char c = Serial.read();
+
+    // Treat newline or carriage return as end of command
+    if (c == '\n' || c == '\r') {
+      if (inputLine.length() > 0) {
+        if (inputLine == "RESET") {
+          // Reset student counter
+          currentStudent = 1;
+          wasNear = false; // optional: avoid immediate re-trigger
+
+          // Optional: brief LCD feedback
+          lcd.clear();
+          lcd.setCursor(0, 0);
+          lcd.print("Reset complete");
+          delay(500);
+          lcd.clear();
+          lcd.setCursor(0, 0);
+          lcd.print("Please scan card");
+        }
+      }
+      inputLine = ""; // clear buffer
+    } else {
+      // Add printable chars to the buffer
+      if (c >= 32 && c <= 126) {
+        inputLine += c;
+      }
+    }
+  }
+}
+
 // -------------------- MAIN LOOP --------------------
 void loop() {
+  // First, check if any serial command came in (e.g. RESET from web app)
+  handleSerial();
+
   long distance = getDistance();
   bool near = (distance <= 1);   // is card in front of scanner?
 
