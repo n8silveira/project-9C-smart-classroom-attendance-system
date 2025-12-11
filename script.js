@@ -1,93 +1,47 @@
-// citation: adapted some help from ChatGPT for functionality and Base44 for good UI/UX ideas
-
-// simulation: 25 students
+// ========================
+// Create student list
+// ========================
 const students = [];
 for (let i = 1; i <= 25; i++) {
   students.push({
     id: i,
     name: `Student ${i}`,
-    status: 'Absent',
-    time: '-',
-    selected: false
+    status: "Absent",
+    time: "-"
   });
 }
 
-const statusEl = document.getElementById('status');
-const tbody = document.getElementById('students-body');
-const connectBtn = document.getElementById('connect-btn');
+const tbody = document.getElementById("students-body");
+const presentEl = document.getElementById("presentCount");
+const absentEl = document.getElementById("absentCount");
+const progressFill = document.getElementById("progressFill");
+const progressPercent = document.getElementById("progressPercent");
 
-const totalEl = document.getElementById('totalStudents');
-const presentEl = document.getElementById('presentCount');
-const absentEl = document.getElementById('absentCount');
+// Modal
+const modal = document.getElementById("profileModal");
+const closeModal = document.getElementById("closeModal");
 
-const progressFill = document.getElementById('progressFill');
-const progressPercent = document.getElementById('progressPercent');
+// Chart
+let attendanceChart;
 
-const resetBtn = document.getElementById('reset-btn');
-const exportBtn = document.getElementById('export-btn');
-
-// Set today's date in the header
-const dateEl = document.querySelector('.date');
-if (dateEl) {
-  const now = new Date();
-  dateEl.textContent = now.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
-}
-
-if (totalEl) {
-  totalEl.textContent = students.length.toString();
-}
-
-// update dashboard stats
-function updateStats() {
-  const present = students.filter(s => s.status === 'Present').length;
-  const absent = students.length - present;
-
-  presentEl.textContent = present;
-  absentEl.textContent = absent;
-
-  const rate = Math.round((present / students.length) * 100);
-  progressFill.style.width = rate + '%';
-  progressPercent.textContent = rate + '%';
-}
-
-
-// render table
+// ========================
+// Render Table
+// ========================
 function renderTable() {
-  tbody.innerHTML = '';
+  tbody.innerHTML = "";
 
-  students.forEach((s, index) => {
-    const tr = document.createElement('tr');
-    if (s.selected) tr.classList.add('selected');
+  students.forEach(s => {
+    const tr = document.createElement("tr");
 
-    const tdName = document.createElement('td'); // student name
-    tdName.textContent = s.name;
+    tr.onclick = () => {
+      if (s.id === 1) openProfileModal();
+    };
 
-    const tdStatus = document.createElement('td'); // status
-    const dot = document.createElement('span');
-    dot.className = 'status-dot ' + (s.status === 'Present' ? 'status-present' : 'status-absent');
-
-    const statusText = document.createElement('span');
-    statusText.textContent = s.status;
-    tdStatus.appendChild(dot);
-    tdStatus.appendChild(statusText);
-
-    const tdTime = document.createElement('td'); // time of scan
-    tdTime.textContent = s.time;
-
-    // row click highlight
-    tr.addEventListener('click', () => {
-      s.selected = !s.selected;
-      renderTable();
-    });
-
-    tr.appendChild(tdName);
-    tr.appendChild(tdStatus);
-    tr.appendChild(tdTime);
+    tr.innerHTML = `
+      <td>${s.name}</td>
+      <td><span class="status-dot ${s.status === "Present" ? "status-present" : "status-absent"}"></span>${s.status}</td>
+      <td>${s.time}</td>
+    `;
 
     tbody.appendChild(tr);
   });
@@ -95,118 +49,137 @@ function renderTable() {
   updateStats();
 }
 
-renderTable();
+// ========================
+// Update Dashboard Stats
+// ========================
+function updateStats() {
+  const present = students.filter(s => s.status === "Present").length;
+  const absent = students.length - present;
 
-// reset feature
-async function resetAttendance() {
-  students.forEach(s => {
-    s.status = 'Absent';
-    s.time = '-';
-    s.selected = false;
-  });
-  renderTable();
+  presentEl.textContent = present;
+  absentEl.textContent = absent;
 
-  if (statusEl) {
-    statusEl.textContent = 'Attendance reset successfully.';
-  }
+  const percent = Math.round((present / students.length) * 100);
+  progressFill.style.width = percent + "%";
+  progressPercent.textContent = percent + "%";
 
-  // tells arduino to reset counter as well
-  if (port && port.writable) {
-    const encoder = new TextEncoder();
-    const writer = port.writable.getWriter();
-    await writer.write(encoder.encode('RESET\n'));
-    writer.releaseLock();
-  }
+  updateAttendanceChart();
 }
 
-// export feature (CSV)
-function exportAttendance() {
-  let csv = 'Student,Status,Check-in Time\n';
+// ========================
+// SMALL ATTENDANCE DONUT CHART
+// ========================
+function updateAttendanceChart() {
+  const present = students.filter(s => s.status === "Present").length;
+  const absent = students.length - present;
 
-  students.forEach(s => {
-    const name = `"${s.name}"`;
-    const status = `"${s.status}"`;
-    const time = `"${s.time}"`;
-    csv += `${name},${status},${time}\n`;
+  const ctx = document.getElementById("attendanceChart").getContext("2d");
+
+  if (attendanceChart) attendanceChart.destroy();
+
+  attendanceChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Present", "Absent"],
+      datasets: [{
+        data: [present, absent],
+        backgroundColor: ["#16a34a", "#dc2626"]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "55%",
+      plugins: { legend: false }
+    }
   });
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-
-  const now = new Date();
-  const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
-  a.href = url;
-  a.download = `attendance_${dateStr}.csv`;
-
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
-// handle SCAN lines from arduino
+// ========================
+// SIMPLE STUDENT INFO MODAL
+// ========================
+function openProfileModal() {
+  document.getElementById("info-name").textContent = "Student 1";
+  document.getElementById("info-email").textContent = "student1@umb.edu";
+  document.getElementById("info-phone").textContent = "+1 (312) 555-1234";
+  document.getElementById("info-id").textContent = "U12345678";
+  document.getElementById("info-course").textContent = "CS 410";
+  document.getElementById("info-major").textContent = "Computer Science";
+
+  modal.style.display = "flex";
+}
+
+closeModal.onclick = () => modal.style.display = "none";
+window.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
+
+// ========================
+// Handle SCAN input from Arduino
+// ========================
 function handleLine(line) {
-  if (!line.startsWith('SCAN')) return;
+  if (!line.startsWith("SCAN")) return;
 
-  const studentId = parseInt(line.split(' ')[1], 10);
-  if (isNaN(studentId) || studentId < 1 || studentId > 25) return;
+  const id = parseInt(line.split(" ")[1]);
+  const s = students[id - 1];
 
-  const s = students[studentId - 1];
-  s.status = 'Present';
-  s.time = new Date().toLocaleString();
+  s.status = "Present";
+  s.time = new Date().toLocaleTimeString();
 
   renderTable();
 }
 
-
-// web serial connection
+// ========================
+// Web Serial
+// ========================
 let port;
-let reader;
 
-async function connectSerial() {
-  if (!('serial' in navigator)) {
-    alert('Web Serial API not supported. Use Chrome or Edge.');
-    return;
-  }
-
+document.getElementById("connect-btn").onclick = async () => {
   try {
     port = await navigator.serial.requestPort();
     await port.open({ baudRate: 9600 });
-    statusEl.textContent = 'Connected — waiting for scans...';
 
     const decoder = new TextDecoderStream();
     port.readable.pipeTo(decoder.writable);
-    reader = decoder.readable.getReader();
+    const reader = decoder.readable.getReader();
 
-    let buffer = '';
-
+    let buffer = "";
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
-
       buffer += value;
-      const lines = buffer.split('\n');
+      const lines = buffer.split("\n");
       buffer = lines.pop();
-
-      for (const line of lines) {
-        if (line.trim().length) handleLine(line.trim());
-      }
+      lines.forEach(l => handleLine(l.trim()));
     }
-
   } catch (err) {
-    console.error(err);
-    statusEl.textContent = 'Error connecting: ' + err;
+    console.error("Serial error:", err);
   }
-}
+};
 
-connectBtn.addEventListener('click', connectSerial);
+// ========================
+// Reset Attendance
+// ========================
+document.getElementById("reset-btn").onclick = () => {
+  students.forEach(s => {
+    s.status = "Absent";
+    s.time = "-";
+  });
+  renderTable();
+};
 
-// hook up buttons
-if (resetBtn) {
-  resetBtn.addEventListener('click', resetAttendance);
-}
+// ========================
+// Export CSV
+// ========================
+document.getElementById("export-btn").onclick = () => {
+  let csv = "Student,Status,Time\n";
+  students.forEach(s => {
+    csv += `${s.name},${s.status},${s.time}\n`;
+  });
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "attendance.csv";
+  a.click();
+};
 
-if (exportBtn) {
-  exportBtn.addEventListener('click', exportAttendance);
-}
+// Initial render
+renderTable();
