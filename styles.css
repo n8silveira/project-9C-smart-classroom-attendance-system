@@ -232,7 +232,9 @@ tbody td {
   background: var(--absent);
   margin-right: 8px;
 }
-
-.status-present .status-dot {
+.status-dot.status-present {
   background: var(--present);
+}
+.status-dot.status-absent {
+  background: var(--absent);
 }
